@@ -8,7 +8,7 @@ const cors = require('cors');
 const io = require('socket.io')(http, {
     cors: {
         origin: "http://localhost:3000",
-        origin: "https://rebecka-oscarsson.github.io/deepchat/"
+        origin: "https://rebecka-oscarsson.github.io"
     }
 });
 

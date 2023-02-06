@@ -12,22 +12,38 @@ const io = require("socket.io")(http, {
 
 app.use(cors());
 
-function setUserPosition(pressedKey, socketID, users) {
+function setUserPosition(data, users) {
   return users.map((user) => {
-    if (user.socketID == socketID) {
-      user.position = changePosition(pressedKey, user.position);
-      user.movement = pressedKey;
+    if (user.socketID == data.socketID) {
+      user.position = changePosition(data.pressed, user.position);
+      user.movement = data.pressed;
     }
-    //return user;
   });
 }
+
+function addUserMessage(message, users) {
+  return users.map((user) => {
+    if (user.socketID == message.socketID) {
+      message.time = new Date();
+      user.messages.push(message);
+    }
+  });
+}
+
+const isFirstMessage = (socketID, users) => {
+  let userWhoTalked = users.find((user) => user.socketID === socketID);
+  if (userWhoTalked.messages.length === 1) {
+    return true;
+  }
+  return false;
+};
 
 function stopUserMove(socketID, users) {
   return users.map((user) => {
     if (user.socketID == socketID) {
       user.movement = null;
     }
-    return user;
+    //return user;
   });
 }
 
@@ -41,7 +57,7 @@ function changePosition(pressedKey, position) {
       }
       break;
     case "ArrowRight":
-      if (position.left < 96) {
+      if (position.left < 93) {
         //fish.classList.remove("mirror");
         position.left += moveDistance;
       }
@@ -52,7 +68,7 @@ function changePosition(pressedKey, position) {
       }
       break;
     case "ArrowDown":
-      if (position.top < 96) {
+      if (position.top < 80) {
         position.top += moveDistance;
       }
       break;
@@ -62,10 +78,9 @@ function changePosition(pressedKey, position) {
 
 //variabler
 app.locals.users = [];
-app.locals.messages = [];
+//app.locals.messages = [];
 
 //vid connect skickas ett meddelande till frontend och användare läggs till i listan
-
 io.on("connection", (socket) => {
   console.log(`användare med id ${socket.id} kopplade upp`);
   socket.on("disconnect", () => {
@@ -77,12 +92,17 @@ io.on("connection", (socket) => {
     socket.disconnect();
   });
   socket.on("messageFromUser", (data) => {
-    data.time = new Date();
-    app.locals.messages.push(data);
-    io.emit("messageToUsers", app.locals.messages);
+    addUserMessage(data, app.locals.users);
+    //app.locals.messages.push(data);
+    io.emit("updateUserList", app.locals.users);
+    io.emit("messageToUsers", {
+      id: data.id,
+      socketID: data.socketID,
+      first: isFirstMessage(data.socketID, app.locals.users),
+    });
   });
   socket.on("move", (data) => {
-    setUserPosition(data.pressed, data.socketID, app.locals.users);
+    setUserPosition(data, app.locals.users);
     io.emit("updateUserList", app.locals.users);
   });
   socket.on("stop", (data) => {
@@ -94,9 +114,9 @@ io.on("connection", (socket) => {
     app.locals.users.push(data);
     //Sends the list of users to the client
     io.emit("updateUserList", app.locals.users);
-    if (app.locals.messages.length > 0) {
-      socket.emit("messageToUsers", app.locals.messages);
-    }
+    //if (app.locals.messages.length > 0) {
+    //socket.emit("messageToUsers", app.locals.messages);
+    //}
   });
 });
 

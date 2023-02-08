@@ -30,9 +30,9 @@ function addUserMessage(message, users) {
   });
 }
 
-const isFirstMessage = (socketID, users) => {
+function isFirstMessage(socketID, users) {
   let userWhoTalked = users.find((user) => user.socketID === socketID);
-  if (userWhoTalked.messages.length === 1) {
+  if (userWhoTalked?.messages.length === 1) {
     return true;
   }
   return false;

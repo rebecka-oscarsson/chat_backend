@@ -57,7 +57,7 @@ function changePosition(pressedKey, position) {
       }
       break;
     case "ArrowRight":
-      if (position.left < 93) {
+      if (position.left < 86) {
         //fish.classList.remove("mirror");
         position.left += moveDistance;
       }
@@ -68,7 +68,7 @@ function changePosition(pressedKey, position) {
       }
       break;
     case "ArrowDown":
-      if (position.top < 80) {
+      if (position.top < 70) {
         position.top += moveDistance;
       }
       break;

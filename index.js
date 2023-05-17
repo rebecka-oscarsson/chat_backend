@@ -8,19 +8,33 @@ const io = require("socket.io")(http, {
     origin: ["http://localhost:3000", "https://rebecka-oscarsson.github.io"],
   },
 });
-
-
+//const uploadController = require("./controllers/upload");
+const multer = require("multer");
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static(__dirname + '/public'));
+app.use('/uploads', express.static('uploads'));
+
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads')
+  },
+  filename: function (req, file, cb) {
+    const filename = `${Date.now()}-avatar-${file.originalname}`;
+    cb(null, filename)
+  }
+})
+var upload = multer({ storage: storage })
+
 //kopierat
 // const mongoUrl = "mongodb+srv://rebecka:hemligtpwd@cluster1.ho8up.mongodb.net/nyhetsbrev?retryWrites=true&w=majority";
-// const mongoUrlLocal = "mongodb://127.0.0.1:27017";
-// const myMongo = require('mongodb').MongoClient;
-// myMongo.connect(mongoUrl, {
-// useUnifiedTopology:true}).then(client => {console.log("uppkopplad mot databas");
-// const myDatabase = client.db("nyhetsbrev");
-// app.locals.myDatabase = myDatabase})
+const mongoUrlLocal = "mongodb://127.0.0.1:27017";
+const myMongo = require('mongodb').MongoClient;
+myMongo.connect(mongoUrlLocal, {
+useUnifiedTopology:true}).then(client => {console.log("uppkopplad mot databas");
+const myDatabase = client.db("chat");
+app.locals.myDatabase = myDatabase})
 
 
 function setUserPosition(data, users) {
@@ -86,31 +100,33 @@ function changePosition(pressedKey, position) {
   return position;
 }
 
-app.post('/', function (req, res) {
-  console.log('postat')
-  console.log(req.body);
-  res.send({"din fil heter": req.body.filename});
-  //req.app.locals.con.connect((err) => {
-  //   if (err) {
-  //     console.log("det blev fel: ", err)
-  //   }
-  //   let sql = `INSERT INTO documents (docContents, userId, docName) VALUES (${SqlString.escape(req.body.docContents)}, ${req.body.userId}, ${SqlString.escape(req.body.docName)})`;
-  //   req.app.locals.con.query(sql, (err, result) => {
-  //     if (err) {
-  //       console.log("det blev fel: ", err)
-  //     }
-  //     res.json("<h3>dokument sparat!</h3>");
-  //   })
-  // })
+
+//till mongodb
+// app.get("/files", uploadController.getListFiles);
+// app.get("/files/:name", uploadController.download);
+// app.post("/upload", uploadController.uploadFiles);
+
+app.post('/uploadtest', function (req, res) {
+  //uploadController.uploadFiles
+  req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {
+  res.json("svar från bakända");  
+})
+})
+
+app.post('/upload', upload.single('avatar'), function (req, res) {
+  // req.file is the `profile-file` file
+  // req.body will hold the text fields, if there were any
+  console.log(JSON.stringify(req.file))
+  res.json(req.file.path);
 })
 
 app.locals.users = [];
 
 //vid connect skickas ett meddelande till frontend och användare läggs till i listan
 io.on("connection", (socket) => {
-  console.log(`användare med id ${socket.id} kopplade upp`);
+  console.log(`användare ${socket.id} kopplade upp`);
   socket.on("disconnect", () => {
-    console.log(`användare med id ${socket.id} kopplade ner`);
+    console.log(`användare ${socket.id} kopplade ner`);
     app.locals.users = app.locals.users.filter(
       (user) => user.socketID !== socket.id
     );
@@ -142,7 +158,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/", (res) => {
+app.get("/", (req, res) => {
   res.json({
     message: "Här finns bara en bakända",
   });

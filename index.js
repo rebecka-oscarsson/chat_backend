@@ -8,7 +8,7 @@ const io = require("socket.io")(http, {
     origin: ["http://localhost:3000", "https://rebecka-oscarsson.github.io"],
   },
 });
-//const uploadController = require("./controllers/upload");
+
 const multer = require("multer");
 app.use(cors());
 app.use(express.json());
@@ -100,25 +100,21 @@ function changePosition(pressedKey, position) {
   return position;
 }
 
-
-//till mongodb
-// app.get("/files", uploadController.getListFiles);
-// app.get("/files/:name", uploadController.download);
-// app.post("/upload", uploadController.uploadFiles);
-
-app.post('/uploadtest', function (req, res) {
-  //uploadController.uploadFiles
-  req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {
-  res.json("svar från bakända");  
-})
-})
+// app.post('/uploadtest', function (req, res) {
+//   req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {
+//   res.json("svar från bakända");  
+// })
+// })
 
 app.post('/upload', upload.single('avatar'), function (req, res) {
-  // req.file is the `profile-file` file
-  // req.body will hold the text fields, if there were any
-  console.log(JSON.stringify(req.file))
-  res.json(req.file.path);
+  console.log(req.file)
+  res.json(req.file.filename);
 })
+
+for (let index = 0; index < array.length; index++) {
+  const element = array[index];
+  
+}
 
 app.locals.users = [];
 

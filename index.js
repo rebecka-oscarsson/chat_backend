@@ -26,17 +26,17 @@ app.use("/avatars", avatarRouter);
 
 //kopierat
 // const mongoUrl = "mongodb+srv://rebecka:hemligtpwd@cluster1.ho8up.mongodb.net/nyhetsbrev?retryWrites=true&w=majority";
-const mongoUrlLocal = "mongodb://127.0.0.1:27017";
-const myMongo = require("mongodb").MongoClient;
-myMongo
-  .connect(mongoUrlLocal, {
-    useUnifiedTopology: true,
-  })
-  .then((client) => {
-    console.log("uppkopplad mot databas");
-    const myDatabase = client.db("chat");
-    app.locals.myDatabase = myDatabase;
-  });
+// const mongoUrlLocal = "mongodb://127.0.0.1:27017";
+// const myMongo = require("mongodb").MongoClient;
+// myMongo
+//   .connect(mongoUrlLocal, {
+//     useUnifiedTopology: true,
+//   })
+//   .then((client) => {
+//     console.log("uppkopplad mot databas");
+//     const myDatabase = client.db("chat");
+//     app.locals.myDatabase = myDatabase;
+//   });
 
 // app.post('/uploadtest', function (req, res) {
 //   req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {

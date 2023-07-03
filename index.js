@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 //app.use(express.static(__dirname + '/public'));
-//app.use("/images", express.static("./uploads"));
+//app.use("/uploads", express.static("./uploads"));
 app.use(express.static(__dirname));
 
 const avatarRouter = require("./routes/avatars");

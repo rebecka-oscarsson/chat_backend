@@ -18,9 +18,10 @@ const io = require("socket.io")(http, {
 app.use(cors());
 app.use(express.json());
 
-//app.use(express.static(__dirname + '/public'));
-//app.use("/uploads", express.static("./uploads"));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname + '/public'));
+app.use("/uploads", express.static("./uploads"));
+//app.use(express.static(__dirname));
+console.log(__dirname)
 
 const avatarRouter = require("./routes/avatars");
 app.use("/avatars", avatarRouter);

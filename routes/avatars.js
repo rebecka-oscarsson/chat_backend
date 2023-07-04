@@ -12,7 +12,7 @@ router.post("/upload", upload, async (req, res) => {
   const metadata = await image.metadata();
   const widthToHeightRatio = metadata.width/metadata.height
   widthToHeightRatio > 1 ? image.resize({ width: 200 }) : image.resize({ height: 200 });
-  await image.toFile("./public/uploads/" + newFilename);
+  await image.toFile("./uploads/" + newFilename);
   fs.unlinkSync(req.file.path); //radera stor bild
   res.json({"filename": newFilename, "widthToHeightRatio": widthToHeightRatio});
 });

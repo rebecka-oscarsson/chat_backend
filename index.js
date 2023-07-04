@@ -17,8 +17,9 @@ const io = require("socket.io")(http, {
 
 app.use(cors());
 app.use(express.json());
-
-app.use(express.static(__dirname + '/uploads'));
+const path = require('path')
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+//app.use(express.static(__dirname))
 
 const avatarRouter = require("./routes/avatars");
 app.use("/avatars", avatarRouter);
@@ -96,11 +97,11 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "Här finns bara en bakända",
-  });
-});
+// app.get("/", (req, res) => {
+//   res.json({
+//     message: "Här finns bara en bakända",
+//   });
+// });
 
 http.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

@@ -1,7 +1,12 @@
+const {  setUserPosition,
+  addUserMessage,
+  isFirstMessage,
+  stopUserMove,
+} = require("./services");
 const express = require("express");
 const app = express();
+const fs = require("fs");
 const PORT = 4000;
-
 const http = require("http").Server(app);
 const cors = require("cors");
 const io = require("socket.io")(http, {
@@ -11,89 +16,64 @@ const io = require("socket.io")(http, {
 });
 
 app.use(cors());
+app.use(express.json());
+const path = require('path')
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+//app.use(express.static(__dirname))
 
-function setUserPosition(data, users) {
-  return users.map((user) => {
-    if (user.socketID == data.socketID) {
-      user.position = changePosition(data.pressed, user.position);
-      user.movement = data.pressed;
-    }
-  });
-}
+const avatarRouter = require("./routes/avatars");
+app.use("/avatars", avatarRouter);
 
-function addUserMessage(message, users) {
-  return users.map((user) => {
-    if (user.socketID == message.socketID) {
-      message.time = new Date();
-      user.messages.push(message);
-    }
-  });
-}
+//kopierat
+// const mongoUrl = "mongodb+srv://rebecka:hemligtpwd@cluster1.ho8up.mongodb.net/nyhetsbrev?retryWrites=true&w=majority";
+// const mongoUrlLocal = "mongodb://127.0.0.1:27017";
+// const myMongo = require("mongodb").MongoClient;
+// myMongo
+//   .connect(mongoUrlLocal, {
+//     useUnifiedTopology: true,
+//   })
+//   .then((client) => {
+//     console.log("uppkopplad mot databas");
+//     const myDatabase = client.db("chat");
+//     app.locals.myDatabase = myDatabase;
+//   });
 
-function isFirstMessage(socketID, users) {
-  let userWhoTalked = users.find((user) => user.socketID === socketID);
-  if (userWhoTalked?.messages.length === 1) {
-    return true;
-  }
-  return false;
-};
+// app.post('/uploadtest', function (req, res) {
+//   req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {
+//   res.json("svar från bakända");
+// })
+// })
 
-function stopUserMove(socketID, users) {
-  return users.map((user) => {
-    if (user.socketID == socketID) {
-      user.movement = null;
-    }
-    //return user;
-  });
-}
-
-function changePosition(pressedKey, position) {
-  let moveDistance = 0.2;
-  switch (pressedKey) {
-    case "ArrowLeft":
-      if (position.left > 0) {
-        //fish.classList.add("mirror");
-        position.left -= moveDistance;
-      }
-      break;
-    case "ArrowRight":
-      if (position.left < 86) {
-        //fish.classList.remove("mirror");
-        position.left += moveDistance;
-      }
-      break;
-    case "ArrowUp":
-      if (position.top > 0) {
-        position.top -= moveDistance;
-      }
-      break;
-    case "ArrowDown":
-      if (position.top < 70) {
-        position.top += moveDistance;
-      }
-      break;
-  }
-  return position;
-}
-
-//variabler
 app.locals.users = [];
-//app.locals.messages = [];
 
 //vid connect skickas ett meddelande till frontend och användare läggs till i listan
 io.on("connection", (socket) => {
-  console.log(`användare med id ${socket.id} kopplade upp`);
+  console.log(`användare ${socket.id} kopplade upp`);
   socket.on("disconnect", () => {
-    console.log(`användare med id ${socket.id} kopplade ner`);
+    console.log(`användare ${socket.id} kopplade ner`);
+    let userWhoLeft = app.locals.users.find(
+      (user) => user.socketID === socket.id
+    );
+    console.log("utloggad", userWhoLeft);
+    if (userWhoLeft && userWhoLeft.avatar) {
+      const path = "./uploads/" + userWhoLeft.avatar;
+      console.log("ta bort", path);
+      fs.unlink(path, (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+      });
+    }
     app.locals.users = app.locals.users.filter(
       (user) => user.socketID !== socket.id
     );
     io.emit("updateUserList", app.locals.users);
+
     socket.disconnect();
   });
   socket.on("messageFromUser", (data) => {
     addUserMessage(data, app.locals.users);
-    //app.locals.messages.push(data);
     io.emit("updateUserList", app.locals.users);
     io.emit("messageToUsers", {
       id: data.id,
@@ -114,79 +94,14 @@ io.on("connection", (socket) => {
     app.locals.users.push(data);
     //Sends the list of users to the client
     io.emit("updateUserList", app.locals.users);
-    //if (app.locals.messages.length > 0) {
-    //socket.emit("messageToUsers", app.locals.messages);
-    //}
   });
 });
 
-// io.on("connection", (socket) => {
-//     socket.on("connected", (enteredName) => {
-//         let userObject = createUserObject(enteredName, socket.id);
-//         app.locals.users.push(userObject);
-//         if (app.locals.messages) {
-//             for (let index = 0; index < app.locals.messages.length; index++) {
-//                 socket.emit("displayMessage", app.locals.messages[index] //skickar gamla meddelanden till den nyss anslutna
-//                 );
-//             }
-//         }
-//         let connectInfo = {
-//             userName: userObject.userName,
-//             time: getTime(),
-//             connected: true,
-//             message: connectMsgs[Math.floor(Math.random() * connectMsgs.length)]
-//         }
-//         io.emit("displayMessage", connectInfo);
-//         saveMessages(app.locals.messages, connectInfo); //sparar anslutningsmeddelande
-//         io.emit("userList", app.locals.users); //skickar lista på anslutna användare
-//         console.log(userObject.userName + " ansluten " + getTime());
-//     })
-
-//vid disconnect skickas ett meddelande till frontend och användare tas bort ur listan
-//     socket.on("disconnect", () => {
-//         let userObject = app.locals.users.find(userObject => userObject.userId === socket.id);
-//         if (userObject) { //för att undvika krasch om userObject inte går att hämta
-//             let index = app.locals.users.indexOf(userObject);
-//             let disconnectInfo = {
-//                 userName: userObject.userName,
-//                 time: getTime(),
-//                 connected: false,
-//                 message: disconnectMsgs[Math.floor(Math.random() * disconnectMsgs.length)]
-//             }
-//             io.emit("displayMessage", disconnectInfo);
-//             saveMessages(app.locals.messages, disconnectInfo);
-//             app.locals.users.splice(index, 1); //tar bort användare
-//             io.emit("userList", app.locals.users); //skickar lista på anslutna användare
-//             console.log(userObject.userName + " frånkopplad " + getTime());
-//         }
-//         else {
-//             console.log("fel vid utloggning");
-//             socket.emit("error", false); //false innebär visa ej felmeddelande
-//         }
-//     })
-
-//     //när chatmeddelande kommer från en användare
-//     socket.on("messageSent", (message) => {
-//         let userObject = app.locals.users.find(userObject => userObject.userId === socket.id); //hitta användaren som skickat
-//         if (userObject) { //för att undvika krasch om userObject inte går att hämta
-//             let messageObject = createMessageObject(message, userObject);
-//             console.log(messageObject.userName + " skrev: " + messageObject.message);
-//             saveMessages(app.locals.messages, messageObject) //sparar senaste två meddelanden för att visa vid inlogg
-//             io.emit("displayMessage", messageObject //skickar tillbaka till frontenden
-//             );
-//         }
-//         else {
-//             console.log("fel vid chattmeddelande");
-//             socket.emit("error", true); //true innebär att felmeddelande ska visas
-//         }
-//     })
-// })
-
-app.get("/", (req, res) => {
-  res.json({
-    message: "Här finns bara en bakända",
-  });
-});
+// app.get("/", (req, res) => {
+//   res.json({
+//     message: "Här finns bara en bakända",
+//   });
+// });
 
 http.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

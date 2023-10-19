@@ -97,11 +97,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// app.get("/", (req, res) => {
-//   res.json({
-//     message: "Här finns bara en bakända",
-//   });
-// });
+app.get("/health", (req, res) => {
+  res.json({
+    status: "up",
+  });
+});
 
 http.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);

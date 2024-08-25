@@ -29,7 +29,7 @@ function changePosition(pressedKey, position) {  let moveDistance = 0.2;
 function setUserPosition(data, users) {
   return users.map((user) => {
     if (user.socketID == data.socketID) {
-      user.position = changePosition(data.pressed, user.position, user.widthToHeightRatio);
+      user.position = changePosition(data.pressed, user.position);
       user.movement = data.pressed;
     }
   });

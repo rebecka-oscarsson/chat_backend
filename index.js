@@ -1,8 +1,10 @@
-const {  setUserPosition,
+const {
+  setUserPosition,
   addUserMessage,
   isFirstMessage,
   stopUserMove,
 } = require("./services");
+const { makeFishBotTalk } = require("./fishbot.js");
 const express = require("express");
 const app = express();
 const fs = require("fs");
@@ -14,37 +16,29 @@ const io = require("socket.io")(http, {
     origin: ["http://localhost:3000", "https://rebecka-oscarsson.github.io"],
   },
 });
+require("dotenv").config();
 
 app.use(cors());
 app.use(express.json());
-const path = require('path')
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //app.use(express.static(__dirname))
 
 const avatarRouter = require("./routes/avatars");
 app.use("/avatars", avatarRouter);
 
-//kopierat
-// const mongoUrl = "mongodb+srv://rebecka:hemligtpwd@cluster1.ho8up.mongodb.net/nyhetsbrev?retryWrites=true&w=majority";
-// const mongoUrlLocal = "mongodb://127.0.0.1:27017";
-// const myMongo = require("mongodb").MongoClient;
-// myMongo
-//   .connect(mongoUrlLocal, {
-//     useUnifiedTopology: true,
-//   })
-//   .then((client) => {
-//     console.log("uppkopplad mot databas");
-//     const myDatabase = client.db("chat");
-//     app.locals.myDatabase = myDatabase;
-//   });
-
-// app.post('/uploadtest', function (req, res) {
-//   req.app.locals.myDatabase.collection("avatars").insertOne(req.body).then(()=> {
-//   res.json("svar från bakända");
-// })
-// })
-
-app.locals.users = [];
+app.locals.users = [
+  {
+    userName: "fishbot",
+    socketID: "fishbot",
+    userColor: "hsl(303, 71%, 59%)",
+    position: { top: 50, left: 50 },
+    messages: [],
+    avatar: null,
+    widthToHeightRatio: 0.72,
+    movement: null,
+  },
+];
 
 //vid connect skickas ett meddelande till frontend och användare läggs till i listan
 io.on("connection", (socket) => {
@@ -69,12 +63,12 @@ io.on("connection", (socket) => {
       (user) => user.socketID !== socket.id
     );
     io.emit("updateUserList", app.locals.users);
-
     socket.disconnect();
   });
   socket.on("messageFromUser", (data) => {
     addUserMessage(data, app.locals.users);
     io.emit("updateUserList", app.locals.users);
+    makeFishBotTalk(io, app.locals.users, data);
     io.emit("messageToUsers", {
       id: data.id,
       socketID: data.socketID,

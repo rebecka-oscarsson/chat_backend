@@ -56,7 +56,7 @@ function getLatestMessages(userId, userList) {
   let userWhoTalked = userList.find((user) => user.socketID === userId);
   let messages = userWhoTalked?.messages;
   if (messages?.length > 4) {
-    messages = messages.slice(0, 4);
+    messages = messages.slice(-4);
   }
   return messages.map((message) => {
     return { role: "user", content: message.text };
@@ -99,5 +99,10 @@ async function makeFishBotTalk(io, userList, latestMessage) {
     });
   }
 }
+
+//sätt ett intervall för om boten ska röra sig
+//om den ska röra sig bestäm åt vilket håll och hur långt
+//sätt intervall och anropa setUserPosition ett visst antal gånger
+//(beroende på hur långt den ska simma)
 
 module.exports = { fetchAiAnswer, makeFishBotTalk };

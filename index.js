@@ -27,18 +27,18 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const avatarRouter = require("./routes/avatars");
 app.use("/avatars", avatarRouter);
 
-app.locals.users = [
-  {
-    userName: "fishbot",
-    socketID: "fishbot",
-    userColor: "hsl(303, 71%, 59%)",
-    position: { top: 50, left: 50 },
-    messages: [],
-    avatar: null,
-    widthToHeightRatio: 0.72,
-    movement: null,
-  },
-];
+const fishBot = {
+  userName: "fishbot",
+  socketID: "fishbot",
+  userColor: "hsl(100, 70%, 60%)",
+  position: { top: 50, left: 50 },
+  messages: [],
+  avatar: null,
+  widthToHeightRatio: 0.72,
+  movement: null,
+};
+
+app.locals.users = [fishBot];
 
 //vid connect skickas ett meddelande till frontend och användare läggs till i listan
 io.on("connection", (socket) => {
@@ -48,7 +48,6 @@ io.on("connection", (socket) => {
     let userWhoLeft = app.locals.users.find(
       (user) => user.socketID === socket.id
     );
-    console.log("utloggad", userWhoLeft);
     if (userWhoLeft && userWhoLeft.avatar) {
       const path = "./uploads/" + userWhoLeft.avatar;
       console.log("ta bort", path);
@@ -62,6 +61,11 @@ io.on("connection", (socket) => {
     app.locals.users = app.locals.users.filter(
       (user) => user.socketID !== socket.id
     );
+    //ta bort senaste pratbubblan för fishbot om alla loggat ut
+    if (app.locals.users.length === 1) {
+      fishBot.messages = [];
+      app.locals.users = [fishBot];
+    }
     io.emit("updateUserList", app.locals.users);
     socket.disconnect();
   });

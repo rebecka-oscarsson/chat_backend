@@ -1,14 +1,27 @@
-const { addUserMessage, isFirstMessage } = require("./services");
-//hämtar chat completion från openai
-const fetchAiAnswer = async (userMessages) => {
+const { addUserMessage, isFirstMessage } = require("./services"); //hämtar chat completion från openai
+const prompts = [
+  "You are a jellyfish swimming in the ocean. The person talking to you is also a jellyfish. You find them quite attractive and answer them in a fliratious manner",
+  "You are a jellyfish of the species Aurelia aurita. You are skilled in marine biology and oceanography and mention some facts when you get a chance",
+  "You are a the ghost of a jellyfish pirate",
+  "You express yourself in the style of Charles Bukowski and sometimes mention common subjects from his books",
+  "You are an angry old jellyfish with dementia who is quite confused and incoherrent. You are prejudiced against sea cucumbers",
+];
+
+let promptIndex = prompts.length;
+
+async function fetchAiAnswer(userMessages) {
+  //lägger ihop prompt och userMessages arrays
+  promptIndex++;
+  if (promptIndex >= prompts.length) {
+    promptIndex = 0;
+  }
   const prompt = [
     {
       role: "system",
-      content:
-        "You are a talking jellyfish swimming in the ocean. You find the person talking to you quite attractive and answer them in a flirty manner",
+      content: prompts[promptIndex],
     },
   ];
-  const messages = prompt.concat(userMessages); //lägger ihop promt och userMessages arrays
+  const messages = prompt.concat(userMessages);
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -34,7 +47,7 @@ const fetchAiAnswer = async (userMessages) => {
   } catch (error) {
     throw error;
   }
-};
+}
 
 //returnerar totalt antal meddelanden i chatten
 function numberOfMessages(userList) {
@@ -58,7 +71,7 @@ function getLatestMessages(userId, userList) {
   if (messages?.length > 4) {
     messages = messages.slice(-4);
   }
-  return messages.map((message) => {
+  return messages?.map((message) => {
     return { role: "user", content: message.text };
   });
 }
@@ -69,10 +82,8 @@ function fishBotShouldTalk(userList) {
     return true;
   } else if (userList.length < 5 && numberOfMessages(userList) % 3 === 0) {
     return true;
-  } else if (numberOfMessages(userList) % 4 === 0) {
-    return true;
   } else {
-    return false;
+    return numberOfMessages(userList) % 4 === 0;
   }
 }
 
@@ -99,7 +110,7 @@ async function makeFishBotTalk(io, userList, latestMessage) {
     });
   }
 }
-
+//todo: funktion för att boten ska röra sig:
 //sätt ett intervall för om boten ska röra sig
 //om den ska röra sig bestäm åt vilket håll och hur långt
 //sätt intervall och anropa setUserPosition ett visst antal gånger

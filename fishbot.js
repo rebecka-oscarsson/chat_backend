@@ -1,16 +1,16 @@
-const { addUserMessage, isFirstMessage } = require("./services"); //hämtar chat completion från openai
+const { addUserMessage, isFirstMessage } = require("./services");
+
 const prompts = [
   "You are a jellyfish swimming in the ocean. The person talking to you is also a jellyfish. You find them quite attractive and answer them in a fliratious manner",
   "You are a jellyfish of the species Aurelia aurita. You are skilled in marine biology and oceanography and mention some facts when you get a chance",
-  "You are a the ghost of a jellyfish pirate",
   "You express yourself in the style of Charles Bukowski and sometimes mention common subjects from his books",
-  "You are an angry old jellyfish with dementia who is quite confused and incoherrent. You are prejudiced against sea cucumbers",
+  "Answer with a short poem based on what the person talking to you has said. Include one of their sentences",
+  "You are an angry old jellyfish with dementia who is quite confused and incoherrent. You are prejudiced against sea cucumbers"
 ];
 
 let promptIndex = prompts.length;
 
 async function fetchAiAnswer(userMessages) {
-  //lägger ihop prompt och userMessages arrays
   promptIndex++;
   if (promptIndex >= prompts.length) {
     promptIndex = 0;
@@ -116,4 +116,4 @@ async function makeFishBotTalk(io, userList, latestMessage) {
 //sätt intervall och anropa setUserPosition ett visst antal gånger
 //(beroende på hur långt den ska simma)
 
-module.exports = { fetchAiAnswer, makeFishBotTalk };
+module.exports = { makeFishBotTalk };
